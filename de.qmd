@@ -1,0 +1,406 @@
+---
+title: "`r params$title`"
+format:
+  html:
+    toc: false
+    css: ["style.css"]
+    mainfont: Theinhardt
+    fontsize: "16px"
+    embed-resources: true
+    page-layout: custom
+    link-external-newwindow: true
+    footnotes-hover: true
+    fig-align: center
+    fig-format: retina
+    fig-dpi: 300
+lang: "`r params$lang`"
+params:
+  title: "OA-Monitoring 2022: Anstieg auf hohem Niveau und starke Nachfrage nach Artikelförderung"
+  lead: "Der Anteil an Open-Access-Publikationen, die aus SNF-geförderten Projekten resultieren, ist bis Ende 2022 auf 81% gestiegen. Die Veröffentlichung von Artikeln in Zeitschriften hat der SNF mit mehreren Millionen Franken finanziert."
+  publication_date: "2024-11-13 04:00:00"
+  lang: de
+  use_theinhardt: false
+  reg_font_path: ""
+  bold_font_path: ""
+  it_font_path: ""
+  boldit_font_path: ""
+  doi_url: "https://doi.org/10.46446/datastory.open-access-publications-monitoring-2022"
+  github_url: "https://github.com/snsf-data/datastory_open_access_publications_monitoring_2022"
+execute:
+  echo: false
+  warning: false
+  message: false
+editor_options:
+  chunk_output_type: console
+---
+
+```{r general-setup}
+#| include: false
+
+# Install snf.datastory package if not available, otherwise load it
+if (!require("snf.datastory")) {
+  if (!require("devtools")) {
+    install.packages("devtools")
+    library(devtools)
+  }
+  install_github("snsf-data/snf.datastory")
+  library(snf.datastory)
+}
+
+# Load packages
+library(tidyverse)
+library(lubridate)
+library(scales)
+library(conflicted)
+library(here)
+library(ggiraph)
+library(showtext)
+library(systemfonts)
+library(dplyr)
+library(tidyr)
+library(readr)
+library(stringr)
+library(forcats)
+library(ggplot2)
+library(gt)
+library(glue)
+
+# Conflict preferences
+conflict_prefer("filter", "dplyr")
+conflict_prefer("get_datastory_theme", "snf.datastory")
+conflict_prefer("get_datastory_scheme", "snf.datastory")
+
+source("R/read_and_prepare_data.R")
+source("R/make_figures.R")
+source("R/translations.R")
+
+use_theinhardt <- params$use_theinhardt
+
+if (use_theinhardt) {
+
+  sysfonts::font_add(
+    family = "Theinhardt",
+    regular = params$reg_font_path,
+    bold = params$bold_font_path,
+    italic = params$it_font_path,
+    bolditalic = params$boldit_font_path
+  )
+
+  # Need to register the font to allow its use by ggiraph when creating SVG
+  # files.
+  if (!font_family_exists("Theinhardt")) {
+
+    # Register existing/downloaded fonts
+    register_font(
+      name = "Theinhardt",
+      plain = list(params$reg_font_path, 0),
+      bold = list(params$bol_font_path, 0),
+      italic = list(params$boldit_font_path, 0),
+      bolditalic = list(params$boldit_font_path, 0)
+    )
+  }
+
+  font <- "Theinhardt"
+
+} else {
+
+  font <- "Arial"
+
+}
+
+# Need if we want to use the registered font in ggiraph plots
+showtext_auto()
+
+# Increase showtext package font resolution
+showtext_opts(dpi = 300 * 2)
+
+# Set the locale for date formatting (Windows)
+Sys.setlocale(
+  "LC_TIME",
+  switch(
+    params$lang,
+    en = "English",
+    de = "German",
+    fr = "French"
+  )
+)
+
+# Create function to print number with local language-specific format
+print_num <- function(x) snf.datastory::print_num(x, lang = params$lang)
+
+# Knitr hook for local formatting of printed numbers
+knitr::knit_hooks$set(
+  inline = function(x) {
+    if (!is.numeric(x)) {
+      x
+    } else {
+      print_num(x)
+    }
+  }
+)
+
+```
+
+```{r print-header-infos}
+#| results: asis
+
+# Add publication date to header
+cat(format(as.Date(params$publication_date), "%d.%m.%Y"))
+```
+
+**`r params$lead`**
+
+15 709 wissenschaftliche Publikationen sind im Jahr 2022 aus SNF-geförderten Forschungsprojekten hervorgegangen. Das sind rund 2000 Publikationen mehr als im Vorjahr. 81% davon sind frei zugänglich (Open Access, OA). Im Vergleich zum Jahr 2021 ist der Anteil an OA-Publikationen somit um vier Prozentpunkte gestiegen. Generell hat sich dieser Anteil in den letzten zehn Jahren verdoppelt. Nach den starken Steigerungen war ein vergleichbarer Anstieg für 2022 nicht zu erwarten. Die Zahlen zeigen, dass sich der OA-Anteil nun auf einem hohen Niveau eingependelt hat. Open Access ist im Wissenschaftssystem zum Standard geworden.
+
+::: info-box
+
+### Welche Daten wurden verwendet?
+
+Diese Analyse basiert auf Publikationen, die von den geförderten Forschenden dem SNF gemeldet worden sind (zum Herunterladen auf dem SNF-Datenportal verfügbar). Sie verwendet ausserdem Publikationen aus anderen Quellen, die eine SNF-Förderung erwähnen (die bibliometrische Datenbank von Dimensions sowie Crossref). Metadaten aktueller Publikationen fehlen oft noch oder sind nicht zuverlässig genug. Das verzögert unser Open-Access-Monitoring um ein Jahr. Deshalb haben wir im Jahr 2024 die Publikationen aus 2022 analysiert. Die Daten zu den Open-Access-Kategorien beziehen wir von Unpaywall; sie können [hier](https://raw.githubusercontent.com/snsf-data/datastory_open_access_publications_monitoring_2022/refs/heads/main/data/publications_2022_feb_2024.csv) heruntergeladen werden.
+
+:::
+
+::: {.hide-mobile .hide-tablet}
+::: plot-box
+<div class="plot-title">Entwicklung der OA-Anteile über die letzten Jahre</div>
+```{r plot-desktop-1}
+#| out-width: "100%"
+#| fig-height: 3.5
+
+make_figure_1()
+
+```
+:::
+:::
+
+::: {.hide-desktop}
+::: plot-box
+<div class="plot-title">Entwicklung der OA-Anteile über die letzten Jahre</div>
+```{r plot-mobile-1}
+#| out-width: "100%"
+#| fig-height: 3.5
+
+make_figure_1()
+
+```
+:::
+:::
+
+Neben dem Ziel von 100% OA wird es immer wichtiger, eine vielfältige Publikationslandschaft zu ermöglichen. Hybrid-OA bleibt die häufigste Kategorie und wächst weiter. Daran zeigt sich, wie zentral traditionelle, auf Abonnements und Bezahlschranken aufbauende Geschäftsmodelle nach wie vor sind. Wenn Forschende in Hybrid-Zeitschriften OA veröffentlichen möchten, verlangen die Verlage Freischaltgebühren. Dank der sogenannten [Lesen & Publizieren-Verträge](https://www.swissuniversities.ch/themen/digitalisierung/open-access/verlagsverhandlungen) ist es Schweizer Wissenschaftler:innen oftmals möglich, ihre Artikel frei zugänglich zu publizieren, ohne diese Kosten selbst tragen zu müssen.  
+
+Ein Ziel der 2024 aktualisierten Nationalen Open-Access-Strategie ist es, alternative Publikationsformen wie Diamant-OA besser zu unterstützen. Beim Diamant-Weg werden die Publikationskosten weder von den Lesenden noch den Forschenden getragen, sondern werden über andere Wege wie institutionelle Mitgliedschaften, Spenden oder ähnliches finanziert. Unser Monitoring weist die Kategorie Diamant bisher nicht aus. Solche Publikationen werden unter der Kategorie Gold geführt.
+
+::: {.hide-mobile .hide-tablet}
+::: plot-box
+<div class="plot-title">OA-Anteile der 2022 erschienenen Publikationen aus SNF-geförderter Forschung</div>
+```{r plot-desktop-2}
+#| out-width: "100%"
+#| fig-height: 3.5
+
+make_figure_2()
+
+```
+::: caption
+Aus SNF-geförderter Forschung entstandene, 2022 veröffentlichte Publikationen (Balken), im Vergleich mit den 2021 veröffentlichten Publikationen (Punkte).
+:::
+:::
+:::
+
+::: {.hide-desktop}
+::: plot-box
+<div class="plot-title">OA-Anteile der 2022 erschienenen Publikationen aus SNF-geförderter Forschung</div>
+```{r plot-mobile-2}
+#| out-width: "100%"
+#| fig-height: 3.5
+
+make_figure_2()
+
+```
+::: caption
+Aus SNF-geförderter Forschung entstandene, 2022 veröffentlichte Publikationen (Balken), im Vergleich mit den 2021 veröffentlichten Publikationen (Punkte).
+:::
+:::
+:::
+
+::: info-box
+
+### Was ist Open Access?
+
+Open Access oder freier Zugang bedeutet, dass eine wissenschaftliche Publikation für alle Interessierten weltweit kostenlos über das Internet verfügbar ist. Der SNF schreibt vor, dass alle Resultate aus der von ihm geförderten Forschung frei zugänglich sein müssen. Die Kosten dafür werden vom SNF übernommen. Mit den drei Kategorien Gold, Grün und Hybrid erfüllen die Forschenden die OA-Verpflichtung.
+
+- **Gold:** Die Publikation ist sofort frei zugänglich als Erstveröffentlichung in einer reinen OA-Zeitschrift, als OA-Buch oder als OA-Buchkapitel, üblicherweise nach Bezahlung einer Gebühr.
+- **Grün:** Die Publikation ist frei zugänglich als Zweitveröffentlichung in einem institutionellen oder disziplinären Archiv.
+- **Hybrid:** Die Publikation ist frei zugänglich in einer nicht-offenen Zeitschrift nach Bezahlung einer Freischaltgebühr oder abgedeckt durch institutionelle Lesen & Publizieren-Verträge.
+- **Anderer OA:** Es wurde eine frei zugängliche Version der Publikation gefunden, die aber entweder nur als Vorabversion (z.B. Preprint) vorliegt oder nicht eindeutig einem OA-Weg zugeordnet werden kann (z.B. wegen fehlender Daten).
+- **Eingeschränkt**: Es wurde keine frei zugängliche Version der Publikation gefunden.
+
+:::
+
+### Warum Lizenzen wichtig sind
+
+Open-Access-Publikationen sind frei zugänglich, aber selbstverständlich urheberrechtlich geschützt. Die Forschenden besitzen als Urheber:innen die Rechte an ihren Werken. Damit deutlich wird, wie andere ihre Publikationen verwenden dürfen, vergeben sie Lizenzen. Diese regeln, welche Nutzung erlaubt ist ([Informationsblatt](https://www.snf.ch/media/de/Ta5GhOd5M81J52oQ/Urheberrecht-Verlagsrecht-Lizenzen_Informationsblatt_DE.pdf) Open Access, Urheberrecht, Verlagsrecht und Lizenzen). 
+
+Am häufigsten vergeben die Forschenden sogenannte Creative-Commons-Lizenzen (CC) (siehe Infokasten «Was sind Creative-Commons-Lizenzen?»). Der SNF hat sein Reglement 2023 aktualisiert und verlangt seitdem bei Artikeln die Vergabe einer CC-BY-Lizenz (kurz für «Creative-Commons-Attribution»). Das bedeutet, die Publikationen dürfen frei verbreitet und genutzt werden, sofern die Autor:innen zitiert und Änderungen am Inhalt kenntlich gemacht werden.
+
+Im Jahr 2022 lassen sich für veröffentlichte Artikel im Vergleich zum Vorjahr keine grösseren Veränderungen bei den genutzten Lizenzen feststellen. Der Anteil an CC-BY-Lizenzen ist um sieben Prozentpunkte gestiegen. Die CC-BY-Lizenz wird somit weiterhin am häufigsten verwendet.
+
+Der Anteil der problematischen [CC-BY-NC-ND](https://creativecommons.org/licenses/by-nc-nd/4.0/deed.de)-Lizenzen ist um einen Prozentpunkt gefallen. Diese Lizenz ist deswegen problematisch, weil unter ihnen erschienene Publikationen nicht verändert und dann weiterverbreitet werden dürfen (ND – «No Derivatives»). Das wäre zum Beispiel bei einer Übersetzung der Fall. Auch dürfen diese Publikationen nicht für kommerzielle Zwecke genutzt werden (NC – «Non Commercial»). Beide Einschränkungen decken sich nicht mit der Grundidee von OA. Ausserdem widersprechen sie dem Ziel der Nationalen Open-Access-Strategie, dass wissenschaftliche Erkenntnisse möglichst breit und kreativ genutzt werden.
+
+::: {.hide-mobile .hide-tablet}
+::: plot-box
+<div class="plot-title">Anteile der Lizenzarten von wissenschaftlichen Artikeln im Jahr 2022</div>
+```{r plot-desktop-3}
+#| out-width: "100%"
+#| fig-height: 4
+
+make_figure_3()
+
+```
+::: caption
+Aus SNF-geförderter Forschung entstandene, 2022 veröffentlichte Publikationen (Balken), im Vergleich mit den 2021 veröffentlichten Publikationen (Punkte).
+:::
+:::
+:::
+
+::: {.hide-desktop}
+::: plot-box
+<div class="plot-title">Anteile der Lizenzarten von wissenschaftlichen Artikeln im Jahr 2022</div>
+```{r plot-mobile-3}
+#| out-width: "100%"
+#| fig-height: 4
+
+make_figure_3()
+
+```
+::: caption
+Aus SNF-geförderter Forschung entstandene, 2022 veröffentlichte Publikationen (Balken), im Vergleich mit den 2021 veröffentlichten Publikationen (Punkte).
+:::
+:::
+:::
+
+In Gold-OA ist die offene CC-BY-Lizenz bereits Standard. Nur selten werden restriktivere CC-Lizenzen genutzt. In Hybrid-OA ist der Anteil der restriktiven CC-BY-NC-ND-Lizenz mit 20% noch deutlich höher. Es ist allerdings von einem Rückgang dieses Anteils auszugehen. Denn CC-BY-Lizenzen sind eine Anforderung in den Lesen & Publizieren-Verträgen der Hochschulen seit der ersten Verhandlungsrunde ab 2018.
+
+Es zeigt sich, dass Artikel mit unklarer oder restriktiver Lizenz vor allem in den Kategorien Grün und anderer OA vertreten sind. Publikationen bei Grünem OA werden erst in einem zweiten Schritt frei verfügbar. Damit wird nachvollziehbar, warum 56% dieser Artikel in Grünem OA nicht unter einer offenen Lizenz stehen können.
+
+Bei anderem OA handelt es sich vor allem um Preprints, die über viele verschiedene, oft disziplinäre Archive verfügbar gemacht werden. Wir gehen davon aus, dass das Fehlen von Lizenzinformationen bei anderem OA vor allem an fehlenden Metadaten und technischen Gründen liegt.
+
+::: {.hide-mobile .hide-tablet}
+::: plot-box
+<div class="plot-title">Anteile der Lizenzarten und OA-Kategorien von wissenschaftlichen Artikeln im Jahr 2022</div>
+```{r plot-desktop-4}
+#| out-width: "100%"
+#| fig-height: 4
+
+make_figure_4()
+
+```
+:::
+:::
+
+::: {.hide-desktop}
+::: plot-box
+<div class="plot-title">Anteile der Lizenzarten und OA-Kategorien von wissenschaftlichen Artikeln im Jahr 2022</div>
+```{r plot-mobile-4}
+#| out-width: "100%"
+#| fig-height: 4
+
+make_figure_4()
+
+```
+:::
+:::
+
+::: info-box
+
+### Was sind Creative-Commons-Lizenzen?
+
+Creative Commons ist eine gemeinnützige Organisation. Die von ihr entwickelten Lizenzen haben zum Ziel, den Umgang mit Urheberrechten im digitalen Zeitalter zu vereinfachen. Zur Auswahl stehen sechs Arten von Lizenzen, die klar festlegen, wie die Nutzer:innen eine Publikation verwenden dürfen.
+
+Ausführliche Informationen zu den einzelnen Lizenzen sind auf der Website von [Creative Commons](https://creativecommons.org/licenses/list.de) zu finden.
+
+:::
+
+### Wie viel der SNF für die Förderung von Open-Access-Artikeln ausgibt
+
+Auch wenn wissenschaftliche Publikationen kostenlos gelesen und genutzt werden können, macht der Veröffentlichungsprozess Arbeit, benötigt Infrastrukturen und es fallen Kosten an. Viele Open-Access-Zeitschriften berechnen daher den Forschenden pro Artikel eine Publikationsgebühr, die sogenannte «Article Processing Charge» (APC). 
+
+Seit 2018 bezahlt der SNF diese Gebühren direkt, wenn Ergebnisse der vom SNF geförderten Forschung in reinen OA-Zeitschriften veröffentlicht werden. Die Nachfrage ist seit Einführung dieser Förderung stark angestiegen, bei nur leicht schwankenden Durchschnittskosten pro Artikel. Seit 2022 wächst die Nachfrage allerdings langsamer.
+
+::: plot-box
+<div class="plot-title">Zwischen 2018 und 2023 bezahlte Article Processing Charges</div>
+```{r table-1}
+#| classes: plain
+
+table_1 <-
+  matrix(
+    c(
+      "2018", "252", "661 548", "2625",
+      "2019", "612", "1 531 543", "2503",
+      "2020", "900", "2 169 550", "2411",
+      "2021", "1159", "2 845 282", "2455",
+      "2022", "1449", "3 698 901", "2553",
+      "2023", "1466", "3 929 097", "2680"
+    ),
+    nrow = 6,
+    ncol = 4,
+    byrow = TRUE
+  )
+
+colnames(table_1) <- c(" Jahr", "Anzahl Publikationsgebühren (APC)", "Vom SNF bezahlte Gesamtsumme CHF", "Ø CHF pro APC")
+
+gt::gt(as.data.frame(table_1)) |>
+  gt::tab_options(table.align = "left")
+
+```
+::: caption
+Vom SNF zwischen 2018 und 2023 bezahlte Article Processing Charges (APC). Die Tabelle gibt die Anzahl der jährlich vom SNF bezahlten APC wieder, nicht die Anzahl der Publikationen. Die Zahlen für die Jahre 2022 und 2023 stehen zum Herunterladen bereit: [APC 2022-2023](https://raw.githubusercontent.com/snsf-data/datastory_open_access_publications_monitoring_2022/refs/heads/main/data/apc_2022_2023_jul_2024.csv).
+:::
+:::
+
+Da der SNF nur die Publikationsgebühren für Artikel in reinen (Gold-)OA-Zeitschriften übernimmt, gehen die meisten Zahlungen an jene Verlage, die eine breite Auswahl an Zeitschriften mit diesem Geschäftsmodell anbieten. Im Jahr 2022 wurden 51% der APC an die drei am häufigsten von den Forschenden gewählten Verlage bezahlt: Springer Nature, Frontiers und MDPI. Bei ihnen sind 48% der vom SNF geförderten Artikel erschienen. 2023 entfielen 45% der Gesamtsumme auf diese drei Verlage. In deren Zeitschriften wurden im selben Jahr rund 39% der SNF-geförderten Artikel veröffentlicht.
+
+Wie hoch sind die vom SNF bezahlten Publikationsgebühren im internationalen Vergleich? Die Initiative OpenAPC sammelt Datensätze zu OA-Publikationsgebühren und macht diese allgemein zugänglich (siehe Infokasten «Was ist OpenAPC?»). Auf der Internetseite von OpenAPC gibt es einige Statistiken zu den dort verfügbaren Daten. Es zeigt sich, dass der SNF verglichen mit anderen Forschungsförderern besonders viele sehr teure APC übernimmt – allen voran für die Zeitschrift Nature Communications. Solche prestigeträchtigen Zeitschriften sind in der Lage, überdurchschnittlich hohe APC zu verlangen. Dies ist eine Folge davon, dass Forschende häufig statt nach ihrer persönlichen Leistung über das Prestige der Zeitschriften bewertet werden, in denen sie ihre Arbeit veröffentlichen. 
+
+### Nichtgewinnorientierte Alternativen entwickeln
+
+Die Hoffnung der Open-Access-Bewegung auf nennenswerte Einsparungen bei den Publikationskosten hat sich bisher nicht erfüllt. Weder auf institutioneller noch nationaler oder internationaler Ebene. Um die Kostenentwicklung bei weiter steigenden Publikationszahlen zu kontrollieren, legt die Nationale OA-Strategie der Schweiz einen Fokus auf nichtgewinnorientierte alternative Publikationsmodelle wie Diamant-OA.
+
+Gleichzeitig mit dem Aufbau dieser Alternativen macht die Strategie klar, dass diese erst mit einer Reform der Qualitätsbewertung für die Forschenden attraktiv werden. Die bisherigen Bemühungen, wie die sogenannte [DORA](https://sfdora.org/read/read-the-declaration-deutsch/)-Erklärung, genügen nicht. Der SNF, die schweizerischen Hochschulen und 750 weitere Organisationen weltweit arbeiten in der Coalition for Advancing Research Assessment ([CoARA](https://coara.eu/)) gemeinsam an dieser Reform.
+
+::: info-box
+
+### Was ist OpenAPC?
+
+OpenAPC ist eine an der Universität Bielefeld in Deutschland angesiedelte Initiative. Sie sammelt Daten zu den Kosten für OA-Publikationen und versucht so, mehr Transparenz im wissenschaftlichen Publikationssystem zu schaffen. Hochschulen, andere Forschungseinrichtungen und Förderer aus der ganzen Welt liefern freiwillig Datensätze an OpenAPC. Zwar verfügt auch OpenAPC nicht über die kompletten Informationen zu den Gesamtkosten. Mit knapp 38 000 für 2022 und 2023 gemeldeten APC-Rechnungen wird aber eine grobe Einordnung möglich.
+
+Ausführliche Informationen zur Initiative, Visualisierungen zum Erkunden der Daten sowie die Datensätze zum Download sind bei [OpenAPC](https://openapc.net/) zu finden.
+
+:::
+
+<p>
+<a class="button-blue" href="https://data.snf.ch/stories/open-access-publikationen-monitoring-2021-de.html">OA-Monitoring 2021</a>
+<br>
+
+<a class="button-blue" href="https://data.snf.ch/stories/open-access-2020-steigerung-um-8-prozentpunkte-de.html">OA-Monitoring 2020</a>
+<br>
+
+<a class="button-blue" href="https://data.snf.ch/stories/neue-zahlen-oa-monitoring-2018-19-de.html">OA-Monitoring 2018-2019</a>
+
+Daten, Text und Code dieser Datengeschichte sind [auf Github verfügbar](`r params$github_url`) und [auf Zenodo archiviert](`r params$doi_url`). <br>DOI: `r str_remove(params$doi_url,"https://doi.org/")`
+
+```{r prevent-internal-snsf-packages, include=FALSE}
+#| include: false
+
+# Internal SNSF packages must not be used in data stories, as their
+# pre-processing functions are internal and the corporate design differs from
+# the data portal.
+
+internal_pkg <- c("snfverse", "snf.preprocessing", "snf.plot")
+
+if (any(internal_pkg %in% loadedNamespaces())) {
+  stop(glue(
+    "You must not use internal SNSF packages in data stories.",
+    " Please resort to snf.datastory."
+  ))
+}
+```

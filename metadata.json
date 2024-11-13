@@ -1,0 +1,25 @@
+[
+  {
+    "title_en": "OA monitoring 2022: strong increase and continued demand for article funding",
+    "title_de": "OA-Monitoring 2022: Anstieg auf hohem Niveau und starke Nachfrage nach Artikelförderung",
+    "title_fr": "OA-Monitoring 2022 : nouvelle progression et forte demande de financements de publications",
+    "author_en": "Tobias Philipp, Policy Team, SNSF;Marlene Lanzerstorfer, Policy Team, SNSF;Simon Gorin, Data Team, SNSF",
+    "author_de": "Tobias Philipp, Policy Team, SNF;Marlene Lanzerstorfer, Policy Team, SNF;Simon Gorin, Data Team, SNF",
+    "author_fr": "Tobias Philipp, Policy Team, FNS;Marlene Lanzerstorfer, Policy Team, FNS;Simon Gorin, Data Team, FNS",
+    "datastory_category": "standard",
+    "publication_date_en": "2024-11-13 04:00:00",
+    "publication_date_de": "2024-11-13 04:00:00",
+    "publication_date_fr": "2024-11-13 04:00:00",
+    "languages": "en;de;fr",
+    "short_desc_en": "By the end of 2022, the percentage of open access publications produced by SNSF-funded projects had risen to 81%. The SNSF funded several million francs for the publication of journal articles.",
+    "short_desc_de": "Der Anteil an Open-Access-Publikationen, die aus SNF-geförderten Projekten resultieren, ist bis Ende 2022 auf 81% gestiegen. Die Veröffentlichung von Artikeln in Zeitschriften hat der SNF mit mehreren Millionen Franken finanziert.",
+    "short_desc_fr": "La part de publications en accès libre issues de projets soutenus par le FNS avait progressé à 81 % fin 2022. Quant à la publication d’articles dans des revues, elle a été financée à hauteur de plusieurs millions de francs par le FNS.",
+    "tags": "T10T,T40T,T220T",
+    "top_story": "false",
+    "github_url": "https://github.com/snsf-data/datastory_open_access_publications_monitoring_2022",
+    "doi": "https://doi.org/10.46446/datastory.open-access-publications-monitoring-2022",
+    "name_en": "open-access-publications-monitoring-2022",
+    "name_de": "open-access-publikationen-monitoring-2022",
+    "name_fr": "publications-en-libre-acces-monitoring-2022"
+  }
+]

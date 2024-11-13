@@ -1,0 +1,406 @@
+---
+title: "`r params$title`"
+format:
+  html:
+    toc: false
+    css: ["style.css"]
+    mainfont: Theinhardt
+    fontsize: "16px"
+    embed-resources: true
+    page-layout: custom
+    link-external-newwindow: true
+    footnotes-hover: true
+    fig-align: center
+    fig-format: retina
+    fig-dpi: 300
+lang: "`r params$lang`"
+params:
+  title: "OA monitoring 2022: strong increase and continued demand for article funding"
+  lead: "By the end of 2022, the percentage of open access publications produced by SNSF-funded projects had risen to 81%. The SNSF funded several million francs for the publication of journal articles."
+  publication_date: "2024-11-13 04:00:00"
+  lang: en
+  use_theinhardt: false
+  reg_font_path: ""
+  bold_font_path: ""
+  it_font_path: ""
+  boldit_font_path: ""
+  doi_url: "https://doi.org/10.46446/datastory.open-access-publications-monitoring-2022"
+  github_url: "https://github.com/snsf-data/datastory_open_access_publications_monitoring_2022"
+execute:
+  echo: false
+  warning: false
+  message: false
+editor_options:
+  chunk_output_type: console
+---
+
+```{r general-setup}
+#| include: false
+
+# Install snf.datastory package if not available, otherwise load it
+if (!require("snf.datastory")) {
+  if (!require("devtools")) {
+    install.packages("devtools")
+    library(devtools)
+  }
+  install_github("snsf-data/snf.datastory")
+  library(snf.datastory)
+}
+
+# Load packages
+library(tidyverse)
+library(lubridate)
+library(scales)
+library(conflicted)
+library(here)
+library(ggiraph)
+library(showtext)
+library(systemfonts)
+library(dplyr)
+library(tidyr)
+library(readr)
+library(stringr)
+library(forcats)
+library(ggplot2)
+library(gt)
+library(glue)
+
+# Conflict preferences
+conflict_prefer("filter", "dplyr")
+conflict_prefer("get_datastory_theme", "snf.datastory")
+conflict_prefer("get_datastory_scheme", "snf.datastory")
+
+source("R/read_and_prepare_data.R")
+source("R/make_figures.R")
+source("R/translations.R")
+
+use_theinhardt <- params$use_theinhardt
+
+if (use_theinhardt) {
+
+  sysfonts::font_add(
+    family = "Theinhardt",
+    regular = params$reg_font_path,
+    bold = params$bold_font_path,
+    italic = params$it_font_path,
+    bolditalic = params$boldit_font_path
+  )
+
+  # Need to register the font to allow its use by ggiraph when creating SVG
+  # files.
+  if (!font_family_exists("Theinhardt")) {
+
+    # Register existing/downloaded fonts
+    register_font(
+      name = "Theinhardt",
+      plain = list(params$reg_font_path, 0),
+      bold = list(params$bol_font_path, 0),
+      italic = list(params$boldit_font_path, 0),
+      bolditalic = list(params$boldit_font_path, 0)
+    )
+  }
+
+  font <- "Theinhardt"
+
+} else {
+
+  font <- "Arial"
+
+}
+
+# Need if we want to use the registered font in ggiraph plots
+showtext_auto()
+
+# Increase showtext package font resolution
+showtext_opts(dpi = 300 * 2)
+
+# Set the locale for date formatting (Windows)
+Sys.setlocale(
+  "LC_TIME",
+  switch(
+    params$lang,
+    en = "English",
+    de = "German",
+    fr = "French"
+  )
+)
+
+# Create function to print number with local language-specific format
+print_num <- function(x) snf.datastory::print_num(x, lang = params$lang)
+
+# Knitr hook for local formatting of printed numbers
+knitr::knit_hooks$set(
+  inline = function(x) {
+    if (!is.numeric(x)) {
+      x
+    } else {
+      print_num(x)
+    }
+  }
+)
+
+```
+
+```{r print-header-infos}
+#| results: asis
+
+# Add publication date to header
+cat(format(as.Date(params$publication_date), "%d.%m.%Y"))
+```
+
+**`r params$lead`**
+
+In 2022, SNSF-funded research projects produced 15,709 scientific publications – an increase of around 2000 publications compared to the previous year. Some 81% of these are open access (OA), which represents an increase of four percentage points compared to 2021. In absolute terms, this share has doubled over the last ten years. Given these sharp increases, a similar rise was not expected for 2022. The figures show that OA has now stabilised at a high level. Open access has become the standard in the research system.
+
+::: info-box
+
+### What data did we use?
+
+This analysis is based on publications that are reported to the SNSF by grant recipients (available for download on the [SNSF Data Portal](https://data.snf.ch/datasets)), and also publications from other sources that mention SNSF funding (the Dimensions bibliometric database and Crossref). Metadata on recent publications is not as available and reliable as required. Thus, the SNSF Open Access monitoring is delayed by one year, meaning that in 2024 we analyse publications through 2022. Data about open access categories are obtained from Unpaywall, and can be [downloaded here](https://raw.githubusercontent.com/snsf-data/datastory_open_access_publications_monitoring_2022/refs/heads/main/data/publications_2022_feb_2024.csv).
+
+:::
+
+::: {.hide-mobile .hide-tablet}
+::: plot-box
+<div class="plot-title">Development of OA shares in recent years</div>
+```{r plot-desktop-1}
+#| out-width: "100%"
+#| fig-height: 3.5
+
+make_figure_1()
+
+```
+:::
+:::
+
+::: {.hide-desktop}
+::: plot-box
+<div class="plot-title">Development of OA shares in recent years</div>
+```{r plot-mobile-1}
+#| out-width: "100%"
+#| fig-height: 3.5
+
+make_figure_1()
+
+```
+:::
+:::
+
+In addition to the goal of 100% OA, facilitating a diverse publishing landscape is becoming increasingly important. Hybrid OA remains the most common category and is continuing to expand, which demonstrates how central traditional business models based on subscriptions and paywalls remain. When researchers want to publish in hybrid journals, publishers charge a fee to make the article open access. Thanks to what are known as [Read & Publish agreements](https://www.swissuniversities.ch/en/topics/open-science/publisher-negotiations), Swiss scientists are often able to publish their articles in an open access format without having to bear the costs themselves.  
+
+One of the objectives of the 2024 update of the Swiss National Open Access Strategy is to improve the support provided for alternative forms of publication such as diamond OA. In the diamond model, publication costs are not borne by readers or researchers, but instead are funded by other means such as institutional memberships, donations or the like. Our monitoring does not yet show the diamond category, with such publications being listed in the gold category.
+
+::: {.hide-mobile .hide-tablet}
+::: plot-box
+<div class="plot-title">OA shares of SNSF-funded research publications published in 2022</div>
+```{r plot-desktop-2}
+#| out-width: "100%"
+#| fig-height: 3.5
+
+make_figure_2()
+
+```
+::: caption
+Publications resulting from SNSF-funding and published in 2022 (bar), compared to publications published in 2021 (point).
+:::
+:::
+:::
+
+::: {.hide-desktop}
+::: plot-box
+<div class="plot-title">OA shares of SNSF-funded research publications published in 2022</div>
+```{r plot-mobile-2}
+#| out-width: "100%"
+#| fig-height: 3.5
+
+make_figure_2()
+
+```
+::: caption
+Publications resulting from SNSF-funding and published in 2022 (bar), compared to publications published in 2021 (point).
+:::
+:::
+:::
+
+::: info-box
+
+### What is open access?
+
+Open access or free accessibility is the free online availability of scientific publications to all interested parties worldwide. The SNSF stipulates that all results from research that it funds must be made freely accessible. The cost of this is borne by the SNSF. Researchers can satisfy the OA obligation via the three categories gold, green and hybrid.
+
+- **Gold**: The publication is immediately freely available as a first publication in a purely OA journal, an OA book or OA book chapter, usually after payment of a fee.
+- **Green**: The publication is freely available as a secondary publication in an institutional or disciplinary archive.
+- **Hybrid**: The publication is freely available in a non-open access journal after payment of an activation fee or is covered by institutional Read & Publish agreements.
+- **Other OA**: A freely available version of the publication was found, but it was either available only as a preliminary version (e.g. preprint) or could not be clearly assigned to an OA pathway (e.g. due to missing data).
+- **Restricted**: No open access version of the publication was found.
+
+:::
+
+### Why licences matter
+
+Open access publications are freely available, but they are of course protected by copyright. As authors, researchers own the rights to their work and issue licences which clearly define how others can use their publications. These licences specify which uses are permitted ([factsheet](https://www.snf.ch/media/en/Ta5GhOd5M81J52oQ/Urheberrecht-Verlagsrecht-Lizenzen_Informationsblatt_EN.pdf) on open access, copyright, right of publication and licences).
+
+Researchers most commonly issue Creative Commons (CC) licences (see info box “What are Creative Commons licences?”). The SNSF updated its regulations in 2023 and now requires a CC BY (short for “Creative Commons Attribution”) licence for articles. This means that the publications can be freely distributed and used, provided that the authors are cited and any changes to the content are noted.
+
+There are no major changes in the licences used for published articles in 2022 compared to the previous year. The share of CC BY licences increased by seven percentage points. The CC BY licence remains the most widely used licence.
+
+The proportion of problematic [CC BY-NC-ND](https://creativecommons.org/licenses/by-nc-nd/4.0/deed.en) licences decreased by one percentage point. They are problematic because publications released under them may not be modified and then redistributed (ND – “No Derivatives”), which would be the case with a translation, for instance. Furthermore, these publications may not be used for commercial purposes (NC – “Non-Commercial”). Both restrictions are inconsistent with the basic idea of OA. They also contradict the objective of the National Open Access Strategy, which is to ensure that scientific knowledge is used as widely and creatively as possible.
+
+::: {.hide-mobile .hide-tablet}
+::: plot-box
+<div class="plot-title">Shares of licence types for scientific articles in 2022</div>
+```{r plot-desktop-3}
+#| out-width: "100%"
+#| fig-height: 4
+
+make_figure_3()
+
+```
+::: caption
+Publications resulting from SNSF-funding and published in 2022 (bar), compared to publications published in 2021 (point).
+:::
+:::
+:::
+
+::: {.hide-desktop}
+::: plot-box
+<div class="plot-title">Shares of licence types for scientific articles in 2022</div>
+```{r plot-mobile-3}
+#| out-width: "100%"
+#| fig-height: 4
+
+make_figure_3()
+
+```
+::: caption
+Publications resulting from SNSF-funding and published in 2022 (bar), compared to publications published in 2021 (point).
+:::
+:::
+:::
+
+The open CC BY licence is already the standard in gold OA. More restrictive types of CC licences are rarely used. In hybrid OA, the share of restrictive CC BY-NC-ND licences is significantly higher at 20%, but this proportion is expected to decrease. This is because CC BY licences have been a requirement in universities’ Read & Publish agreements since the first round of negotiations in 2018.
+
+Articles with unclear or restrictive licences are mainly found in the green and other OA categories. Green OA publications only become freely available at a later stage, which explains why 56% of green OA articles cannot be published under an open licence.
+
+In the case of other OA, these are mainly preprints made available through many different, often discipline-specific archives. We assume that the lack of licence information for other OA is mainly down to a lack of metadata and technical reasons.
+
+::: {.hide-mobile .hide-tablet}
+::: plot-box
+<div class="plot-title">Shares of licence types and OA types of scientific articles in 2022</div>
+```{r plot-desktop-4}
+#| out-width: "100%"
+#| fig-height: 4
+
+make_figure_4()
+
+```
+:::
+:::
+
+::: {.hide-desktop}
+::: plot-box
+<div class="plot-title">Shares of licence types and OA types of scientific articles in 2022</div>
+```{r plot-mobile-4}
+#| out-width: "100%"
+#| fig-height: 4
+
+make_figure_4()
+
+```
+:::
+:::
+
+::: info-box
+
+### What are Creative Commons licences?
+
+Creative Commons is a not-for-profit organisation. The licences it has developed are designed to make copyright easier to manage in the digital age. There are six types of licences to choose from, each of which clearly defines how users can use a publication.
+
+Detailed information about each licence type can be found on the [Creative Commons](https://creativecommons.org/licenses) website.
+
+:::
+
+### How much the SNSF spends on funding OA articles
+
+Even if scientific publications can be read and used free of charge, the publication process involves work, infrastructure and costs. Many OA journals therefore charge researchers a publication fee per article, known as an “article processing charge” (APC). 
+
+Since 2018, the SNSF has been paying these fees directly when the results of research funded by the SNSF are published in OA-only journals. Demand rose sharply after the introduction of this funding, while the average cost per article has fluctuated only slightly. Since 2022, however, demand has been growing more slowly.
+
+::: plot-box
+<div class="plot-title">Article Processing Charges paid between 2018 and 2023</div>
+```{r table-1}
+#| classes: plain
+
+table_1 <-
+  matrix(
+    c(
+      "2018", "252", "661,548", "2625",
+      "2019", "612", "1,531,543", "2503",
+      "2020", "900", "2,169,550", "2411",
+      "2021", "1159", "2,845,282", "2455",
+      "2022", "1449", "3,698,901", "2553",
+      "2023", "1466", "3,929,097", "2680"
+    ),
+    nrow = 6,
+    ncol = 4,
+    byrow = TRUE
+  )
+
+colnames(table_1) <- c(" Year", "No. of publication charges (APC)", "Total amount paid by the SNSF in CHF", "Average cost (CHF) per APC")
+
+gt::gt(as.data.frame(table_1)) |>
+  gt::tab_options(table.align = "left")
+
+```
+::: caption
+Article Processing Charges (APC) paid between 2018 and 2023. The table reflects the number of APCs paid each year by the SNSF, not the number of publications. The data are available for [download](https://raw.githubusercontent.com/snsf-data/datastory_open_access_publications_monitoring_2022/refs/heads/main/data/apc_2022_2023_jul_2024.csv) for the period 2022-2023.
+:::
+:::
+
+As the SNSF only covers publication fees for articles in pure (gold) OA journals, most payments go to publishers who offer a wide range of journals with this business model. In 2022, 51% of the APCs were paid to the three publishers most frequently chosen by researchers: Springer Nature, Frontiers and MDPI, who together published 48% of the SNSF-funded articles. In 2023, these three publishers accounted for 45% of total costs, with approximately 39% of SNSF-funded articles published in their journals.
+
+How much does the SNSF pay in publication costs compared to other countries? The OpenAPC initiative collects datasets on OA publication fees and makes them publicly available (see info box “What is OpenAPC?”). The OpenAPC website provides some statistics on these data. Those statistics show that, compared to other research funders, the SNSF covers a particularly large number of very expensive APCs – in particular for the journal *Nature Communications*. Prestigious journals such as *Nature Communications* are able to command above-average APCs. This is a consequence of the fact that researchers are often evaluated not on the basis of their personal achievements, but on the prestige of the journals in which they publish their work. 
+
+### Developing not-for-profit alternatives
+
+The open access movement’s hope of achieving significant savings in publication costs has not yet been realised, neither at the institutional level nor at the national or international levels. In order to control costs as the number of publications continues to grow, Switzerland’s National OA Strategy is focusing on not-for-profit-oriented alternative publication models such as diamond OA.
+
+While these alternatives are being developed, the strategy makes it clear that they will become attractive to researchers only if quality assessment is reformed. The current efforts, such as the [DORA](https://sfdora.org/read/) declaration, are insufficient. The SNSF, Swiss higher education institutions and 750 other organisations worldwide are collaborating on this reform in the Coalition for Advancing Research Assessment ([CoARA](https://coara.eu/)).
+
+::: info-box
+
+### What is OpenAPC?
+
+OpenAPC is an initiative based at the University of Bielefeld in Germany. It collects data on the costs of OA publishing in order to bring greater transparency to the scientific publishing system. Universities, other research institutions and funders from around the globe voluntarily contribute datasets to OpenAPC. While OpenAPC does not have full information on total costs, it is possible to derive a rough estimate from the nearly 38,000 APC invoices reported for 2022 and 2023.
+
+Detailed information about the initiative, visualisations to explore the data and datasets available for download can be found at [OpenAPC](https://openapc.net/).
+
+:::
+
+<p>
+<a class="button-blue" href="https://data.snf.ch/stories/open-access-publications-monitoring-2021-en.html">OA-Monitoring 2021</a>
+<br>
+
+<a class="button-blue" href="https://data.snf.ch/stories/open-access-in-2020-up-by-8-percentage-points-en.html">OA-Monitoring 2020</a>
+<br>
+
+<a class="button-blue" href="https://data.snf.ch/stories/new-figures-oa-monitoring-2018-19-en.html">OA-Monitoring 2018-2019</a>
+
+Data, text and code of this data story are [available on Github](`r params$github_url`) and [archived on Zenodo](`r params$doi_url`).<br>DOI: `r str_remove(params$doi_url, "https://doi.org/")`
+
+```{r prevent-internal-snsf-packages, include=FALSE}
+#| include: false
+
+# Internal SNSF packages must not be used in data stories, as their
+# pre-processing functions are internal and the corporate design differs from
+# the data portal.
+
+internal_pkg <- c("snfverse", "snf.preprocessing", "snf.plot")
+
+if (any(internal_pkg %in% loadedNamespaces())) {
+  stop(glue(
+    "You must not use internal SNSF packages in data stories.",
+    " Please resort to snf.datastory."
+  ))
+}
+```

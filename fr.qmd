@@ -1,0 +1,406 @@
+---
+title: "`r params$title`"
+format:
+  html:
+    toc: false
+    css: ["style.css"]
+    mainfont: Theinhardt
+    fontsize: "16px"
+    embed-resources: true
+    page-layout: custom
+    link-external-newwindow: true
+    footnotes-hover: true
+    fig-align: center
+    fig-format: retina
+    fig-dpi: 300
+lang: "`r params$lang`"
+params:
+  title: "OA-Monitoring 2022 : nouvelle progression et forte demande de financements de publications"
+  lead: "La part de publications en accès libre issues de projets soutenus par le FNS avait progressé à 81 % fin 2022. Quant à la publication d’articles dans des revues, elle a été financée à hauteur de plusieurs millions de francs par le FNS."
+  publication_date: "2024-11-13 04:00:00"
+  lang: fr
+  use_theinhardt: false
+  reg_font_path: ""
+  bold_font_path: ""
+  it_font_path: ""
+  boldit_font_path: ""
+  doi_url: "https://doi.org/10.46446/datastory.open-access-publications-monitoring-2022"
+  github_url: "https://github.com/snsf-data/datastory_open_access_publications_monitoring_2022"
+execute:
+  echo: false
+  warning: false
+  message: false
+editor_options:
+  chunk_output_type: console
+---
+
+```{r general-setup}
+#| include: false
+
+# Install snf.datastory package if not available, otherwise load it
+if (!require("snf.datastory")) {
+  if (!require("devtools")) {
+    install.packages("devtools")
+    library(devtools)
+  }
+  install_github("snsf-data/snf.datastory")
+  library(snf.datastory)
+}
+
+# Load packages
+library(tidyverse)
+library(lubridate)
+library(scales)
+library(conflicted)
+library(here)
+library(ggiraph)
+library(showtext)
+library(systemfonts)
+library(dplyr)
+library(tidyr)
+library(readr)
+library(stringr)
+library(forcats)
+library(ggplot2)
+library(gt)
+library(glue)
+
+# Conflict preferences
+conflict_prefer("filter", "dplyr")
+conflict_prefer("get_datastory_theme", "snf.datastory")
+conflict_prefer("get_datastory_scheme", "snf.datastory")
+
+source("R/read_and_prepare_data.R")
+source("R/make_figures.R")
+source("R/translations.R")
+
+use_theinhardt <- params$use_theinhardt
+
+if (use_theinhardt) {
+
+  sysfonts::font_add(
+    family = "Theinhardt",
+    regular = params$reg_font_path,
+    bold = params$bold_font_path,
+    italic = params$it_font_path,
+    bolditalic = params$boldit_font_path
+  )
+
+  # Need to register the font to allow its use by ggiraph when creating SVG
+  # files.
+  if (!font_family_exists("Theinhardt")) {
+
+    # Register existing/downloaded fonts
+    register_font(
+      name = "Theinhardt",
+      plain = list(params$reg_font_path, 0),
+      bold = list(params$bol_font_path, 0),
+      italic = list(params$boldit_font_path, 0),
+      bolditalic = list(params$boldit_font_path, 0)
+    )
+  }
+
+  font <- "Theinhardt"
+
+} else {
+
+  font <- "Arial"
+
+}
+
+# Need if we want to use the registered font in ggiraph plots
+showtext_auto()
+
+# Increase showtext package font resolution
+showtext_opts(dpi = 300 * 2)
+
+# Set the locale for date formatting (Windows)
+Sys.setlocale(
+  "LC_TIME",
+  switch(
+    params$lang,
+    en = "English",
+    de = "German",
+    fr = "French"
+  )
+)
+
+# Create function to print number with local language-specific format
+print_num <- function(x) snf.datastory::print_num(x, lang = params$lang)
+
+# Knitr hook for local formatting of printed numbers
+knitr::knit_hooks$set(
+  inline = function(x) {
+    if (!is.numeric(x)) {
+      x
+    } else {
+      print_num(x)
+    }
+  }
+)
+
+```
+
+```{r print-header-infos}
+#| results: asis
+
+# Add publication date to header
+cat(format(as.Date(params$publication_date), "%d.%m.%Y"))
+```
+
+**`r params$lead`**
+
+En 2022, les projets de recherche soutenus par le FNS ont produit 15 709 publications scientifiques, soit environ 2000 de plus que l’année précédente. 81 % d’entre elles sont en libre accès (Open Access, OA), un taux en hausse de quatre points de pourcentage par rapport à 2021 et qui a doublé au cours des dix dernières années. Compte tenu de la croissance antérieure, rien ne prédisait un tel bond en 2022. Ces chiffres montrent que l’Open Access, dont la proportion s’est désormais établie à un niveau élevé, est devenu la règle dans le système scientifique.
+
+::: info-box
+
+### Quelles données avons-nous utilisées ?
+
+Cette analyse repose sur les publications communiquées aux FNS par les bénéficiaires (disponible pour téléchargement sur le [Portail de données du FNS](https://data.snf.ch/datasets)), ainsi que des publications provenant d’autres sources où le FNS est mentionné comme source de financement (base de données bibliométrique Dimensions et Crossref). Les meta données pour les publications les plus récentes ne sont pas toujours aussi complètes et fiables que souhaité. Par conséquent, le monitoring de l’open access au FNS est décalé d'une année, ce qui signifie qu'en 2024, nous analysons les publications jusqu'en 2022. Les données sur les catégories open access sont obtenues via Unpaywall et peuvent être [téléchargées ici](https://raw.githubusercontent.com/snsf-data/datastory_open_access_publications_monitoring_2022/refs/heads/main/data/publications_2022_feb_2024.csv).
+
+:::
+
+::: {.hide-mobile .hide-tablet}
+::: plot-box
+<div class="plot-title">Évolution de la part de l’OA au cours des dernières années</div>
+```{r plot-desktop-1}
+#| out-width: "100%"
+#| fig-height: 3.5
+
+make_figure_1()
+
+```
+:::
+:::
+
+::: {.hide-desktop}
+::: plot-box
+<div class="plot-title">Évolution de la part de l’OA au cours des dernières années</div>
+```{r plot-mobile-1}
+#| out-width: "100%"
+#| fig-height: 3.5
+
+make_figure_1()
+
+```
+:::
+:::
+
+Si atteindre une part d’OA de 100 % demeure l’objectif, il convient cependant de veiller à garantir une grande diversité dans les publications. Les publications selon le modèle OA dit « hybride », qui s’étend continuellement, restent l’approche la plus fréquemment utilisée. Ce constat montre à quel point les modèles commerciaux traditionnels, basés sur les abonnements et les contenus payants, sont encore enracinés. Lorsque des chercheurs et des chercheuses souhaitent publier en OA dans des revues hybrides, les éditeurs exigent des frais de publication. Grâce aux [accords de lecture et de publication](https://www.swissuniversities.ch/fr/themes/open-science/negociations-avec-les-editeurs) (« Read and Publish »), les scientifiques suisses peuvent souvent publier leurs articles en libre accès sans avoir à supporter ces frais.
+
+L’un des objectifs de la stratégie nationale Open Access de la Suisse, actualisée en 2024, est de mieux soutenir les formes de publication alternatives telles que la voie dite « Diamond OA ». En suivant la voie diamant, ni les auteur·es, ni les lecteurs et lectrices ne doivent payer les frais de publication. Ceux-ci sont couverts par des financements institutionnels, des dons ou d’autres mécanismes de financement. Notre monitoring ne tient cependant pas encore compte de la voie diamant. Les publications publiées par cette voie sont incluses dans la voie dorée.
+
+::: {.hide-mobile .hide-tablet}
+::: plot-box
+<div class="plot-title">Part OA des publications issues de recherches soutenues par le FNS parues en 2022</div>
+```{r plot-desktop-2}
+#| out-width: "100%"
+#| fig-height: 3.5
+
+make_figure_2()
+
+```
+::: caption
+Publications résultant du financement du FNS et publiées en 2022 (barres), comparées aux publications de 2021 (points).
+:::
+:::
+:::
+
+::: {.hide-desktop}
+::: plot-box
+<div class="plot-title">Part OA des publications issues de recherches soutenues par le FNS parues en 2022</div>
+```{r plot-mobile-2}
+#| out-width: "100%"
+#| fig-height: 3.5
+
+make_figure_2()
+
+```
+::: caption
+Publications résultant du financement du FNS et publiées en 2022 (barres), comparées aux publications de 2021 (points).
+:::
+:::
+:::
+
+::: info-box
+
+### Qu’est-ce que l’Open Access ?
+
+L’Open Access (OA) consiste à rendre des publications scientifiques gratuitement accessibles à toutes les parties intéressées à travers le monde via Internet. Le FNS prescrit que tous les résultats des recherches qu’il encourage doivent être librement accessibles. Les frais correspondants sont pris en charge par le FNS. Les scientifiques peuvent s’acquitter de leurs obligations en matière d’OA en empruntant la voie dorée, la voie verte ou la voie hybride.
+
+- **Voie dorée **: la publication est immédiatement disponible en libre accès en tant que première publication dans une revue OA, sous forme de livre ou de chapitre de livre OA, généralement moyennant le paiement de frais de publication.
+- **Voie verte **: la publication est disponible en libre accès en tant que publication secondaire dans un dépôt institutionnel ou disciplinaire.
+- **Voie hybride **: la publication est disponible en libre accès dans une revue à abonnement, soit après paiement de frais de publication, soit dans le cadre d’accords institutionnels de lecture et de publication.
+- **Autres voies OA **: il existe une version librement accessible de la publication – soit une version préliminaire (p. ex. prépublication), soit une publication ne pouvant pas être attribuée sans équivoque à l’une des voies OA (p. ex. s’il manque des métadonnées).
+- **Accès restreint **: aucune version de la publication n’est disponible en libre accès.
+
+:::
+
+### Pourquoi les licences sont-elles importantes ?
+
+Si les publications en libre accès sont accessibles au public, elles demeurent évidemment protégées par le droit d’auteur. En tant qu’auteur·es, les chercheurs et chercheuses détiennent les droits sur leurs travaux. Afin que l’utilisation autorisée de leurs publications soit clairement définie, ils et elles accordent des licences ([fiche d'information](https://www.snf.ch/media/fr/Ta5GhOd5M81J52oQ/Urheberrecht-Verlagsrecht-Lizenzen_Informationsblatt_FR.pdf) Open Access, droit d’auteur·e, droit des contrats d’édition et licences).
+
+Pour l’Open Access, les licences Creative Commons (CC) sont les plus fréquemment utilisées (voir l’encadré « Qu’est-ce qu’une licence Creative Commons ? »). Depuis la mise à jour de son règlement en 2023 le FNS exige que les articles soient publiés sous licence CC BY (abréviation de « Creative-Commons-Attribution »). Dans le cadre de ces licences, les publications peuvent être diffusées et réutilisées librement, à condition que les auteur·es soient cité·es et que toute modification du contenu soit signalée.
+
+En 2022, aucun changement substantiel dans les licences utilisées pour les articles publiés n’a été constaté par rapport à l’année précédente. Avec une part en augmentation de sept points de pourcentage, la licence CC BY reste la plus utilisée.
+
+La part des [licences CC BY-NC-ND](https://creativecommons.org/licenses/by-nc-nd/4.0/deed.fr) a, quant à elle, baissé d’un point de pourcentage. Ces licences présentent un caractère problématique dans la mesure où les publications qu’elles couvrent ne peuvent être modifiées puis redistribuées (ND signifiant « No Derivatives »). Cela signifie, par exemple, qu’une traduction serait exclue. De même, ces publications ne peuvent être utilisées à des fins commerciales (NC signifiant « Non Commercial »). En plus de s’opposer à l’idée fondamentale sous-tendant l’OA, ces deux restrictions sont en contradiction avec l’objectif de la stratégie nationale Open Access, à savoir promouvoir une utilisation aussi large et aussi créative que possible des connaissances scientifiques.
+
+::: {.hide-mobile .hide-tablet}
+::: plot-box
+<div class="plot-title">Parts des différents types de licences associées aux articles scientifiques en 2022</div>
+```{r plot-desktop-3}
+#| out-width: "100%"
+#| fig-height: 4
+
+make_figure_3()
+
+```
+::: caption
+Publications résultant du financement du FNS et publiées en 2022 (barres), comparées aux publications de 2021 (points).
+:::
+:::
+:::
+
+::: {.hide-desktop}
+::: plot-box
+<div class="plot-title">Parts des différents types de licences associées aux articles scientifiques en 2022</div>
+```{r plot-mobile-3}
+#| out-width: "100%"
+#| fig-height: 4
+
+make_figure_3()
+
+```
+::: caption
+Publications résultant du financement du FNS et publiées en 2022 (barres), comparées aux publications de 2021 (points).
+:::
+:::
+:::
+
+Dans la voie dorée, la licence CC BY est déjà la norme. Les licences CC plus restrictives n’y sont que rarement utilisées. Dans la voie hybride, la proportion des licences restrictives CC BY-NC-ND est, à 20 %, encore nettement la plus élevée en comparaison aux autres catégories OA. Étant donné que depuis 2018 et les premiers accords de lecture et de publication des hautes écoles, les articles doivent obligatoirement être publiés sous licences CC BY, cette proportion devrait toutefois se réduire.
+
+Il apparaît que les articles dont la licence n’est pas clairement définie ou qui sont publiés sous licence restrictive sont surtout représentés dans la voie verte et les autres voies OA. Le fait que les publications dans la voie verte ne deviennent librement accessibles que dans un deuxième temps explique pourquoi 56 % des articles de cette catégorie ne peuvent être publiés sous licence ouverte.
+
+Dans le cas des autres voies OA, il s’agit surtout de prépublications qui sont mises à disposition via différentes archives, souvent disciplinaires. Nous supposons que le défaut d’informations sur la licence pour les autres voies OA est principalement dû à l’absence de métadonnées ou à des raisons techniques.
+
+::: {.hide-mobile .hide-tablet}
+::: plot-box
+<div class="plot-title">Parts des différents types de licences et d’OA associées aux articles scientifiques en 2022</div>
+```{r plot-desktop-4}
+#| out-width: "100%"
+#| fig-height: 4
+
+make_figure_4()
+
+```
+:::
+:::
+
+::: {.hide-desktop}
+::: plot-box
+<div class="plot-title">Parts des différents types de licences et d’OA associées aux articles scientifiques en 2022</div>
+```{r plot-mobile-4}
+#| out-width: "100%"
+#| fig-height: 4
+
+make_figure_4()
+
+```
+:::
+:::
+
+::: info-box
+
+### Qu’est-ce qu’une licence Creative Commons ?
+
+Creative Commons est une organisation à but non lucratif qui a développé des licences destinées à simplifier la gestion des droits d’auteur à l’ère numérique. Elle propose six types de licences, qui définissent clairement les droits des utilisateurs et utilisatrices en rapport avec une publication.
+
+Des informations détaillées sur les différentes licences sont disponibles sur le site Internet de [Creative Commons](https://creativecommons.org/licenses/list.fr).
+
+:::
+
+### Dépenses du FNS en faveur de la promotion d’articles publiés en Open Access
+
+Bien que les publications scientifiques puissent être consultées et réutilisées gratuitement, le processus de publication demande du travail, nécessite des infrastructures et engendre des coûts. C’est pourquoi de nombreuses revues Open Access facturent aux chercheuses et chercheurs des frais de publication par article, appelés « Article Processing Charge » (APC).
+
+Depuis 2018, le FNS paie directement ces frais lorsque les résultats de la recherche qu’il encourage sont publiés dans des revues 100 % OA. La demande a fortement augmenté depuis l’introduction de ce financement, avec un coût moyen par article qui ne varie que légèrement. Depuis 2022, on observe néanmoins un ralentissement de cette progression.
+
+::: plot-box
+<div class="plot-title">Frais de publication payés de 2018 à 2023</div>
+```{r table-1}
+#| classes: plain
+
+table_1 <-
+  matrix(
+    c(
+      "2018", "252", "661 548", "2625",
+      "2019", "612", "1 531 543", "2503",
+      "2020", "900", "2 169 550", "2411",
+      "2021", "1159", "2 845 282", "2455",
+      "2022", "1449", "3 698 01", "2553",
+      "2023", "1466", "3 929 097", "2680"
+    ),
+    nrow = 6,
+    ncol = 4,
+    byrow = TRUE
+  )
+
+colnames(table_1) <- c(" Année", "Nombre d’APC", "Montant total payé par le FNS (en CHF)", "Ø CHF par APC")
+
+gt::gt(as.data.frame(table_1)) |>
+  gt::tab_options(table.align = "left")
+
+```
+::: caption
+Frais de publication payés de 2018 à 2023. Le tableau reflète le nombre d’APC payées chaque année par le FNS, non le nombre de publications. Les données pour la période 2022-2023 peuvent être téléchargées via le lien suivant : [frais de publication 2022-2023](https://raw.githubusercontent.com/snsf-data/datastory_open_access_publications_monitoring_2022/refs/heads/main/data/apc_2022_2023_jul_2024.csv).
+:::
+:::
+
+Étant donné que le FNS prend en charge uniquement les frais de publication d’articles dans des revues 100 % OA (voie dorée), la plupart des paiements sont perçus par les éditeurs qui proposent une large sélection de revues avec ce modèle économique. En 2022, 51 % des APC ont été versés à Springer Nature, Frontiers et MDPI – soit les trois éditeurs les plus souvent choisis par les chercheuses et chercheurs – pour la publication de 48 % des articles soutenus par le FNS. En 2023, ces trois éditeurs ont perçu 45 % de la somme totale pour la publication, dans leurs revues, d’environ 39 % des articles soutenus par le FNS.
+
+À combien se montent les frais de publication payés par le FNS en comparaison internationale ? L’initiative OpenAPC collecte des données sur les frais de publication OA et les rend accessibles publiquement (voir l’encadré « Qu’est-ce qu’OpenAPC ? »). Elle dispose également d’un site Internet sur lequel sont proposées des statistiques issues de l’exploitation de ces données. Celles-ci font apparaître que, par rapport à d’autres organismes d’encouragement, le FNS prend en charge un très grand nombre d’APC particulièrement coûteux, notamment en relation avec la revue Nature Communications. En raison de leur prestige, de telles revues sont en mesure d’exiger des APC plus élevés que la moyenne – une conséquence du fait que les chercheuses et chercheurs sont souvent évalués en fonction du prestige des revues dans lesquelles ils et elles publient plutôt que de la qualité de leurs travaux.
+
+### Développer des alternatives à but non lucratif
+
+L’espoir que nourrissait le mouvement Open Access, à savoir de réaliser des économies significatives sur les coûts de publication, ne s’est pas encore concrétisé, et ce ni sur le plan institutionnel, ni sur le plan national ou international. Afin de garder le contrôle de l’évolution des coûts dans un contexte d’augmentation du nombre de publications, la stratégie nationale OA de la Suisse met l’accent sur des modèles de publication alternatifs à but non lucratif tel que la voie diamant. 
+
+Parallèlement à la mise en place de ces alternatives, la stratégie explique que celles-ci ne deviendront attrayantes pour les chercheuses et chercheurs qu’après une réforme de l’évaluation qualitative des publications. En effet, les efforts entrepris jusqu’à présent, tels que la déclaration [DORA](https://sfdora.org/read/read-the-declaration-french/), ne suffisent pas. Le FNS, les hautes écoles suisses et 750 autres organisations du monde entier travaillent ensemble à cette réforme au sein de la Coalition for Advancing Research Assessment ([CoARA](https://coara.eu/)).
+
+::: info-box
+
+### Qu’est-ce qu’OpenAPC ?
+
+OpenAPC est une initiative basée à l’Université de Bielefeld en Allemagne. Elle collecte des données sur les coûts des publications OA dans le but de créer plus de transparence dans le système de publication scientifique. Ses statistiques sont alimentées par des données fournies volontairement par des hautes écoles, des instituts de recherche et des organismes de financement du monde entier. Si OpenAPC ne dispose pas, elle non plus, de l’ensemble des informations sur les coûts totaux, les 38 000 APC exploitées lui permettent toutefois d’offrir une image assez précise de leur répartition.
+
+Des informations détaillées sur l’initiative, des outils de visualisation des données ainsi que des jeux de données à télécharger sont disponibles sur [le site d’OpenAPC](https://openapc.net/).
+
+:::
+
+<p>
+<a class="button-blue" href="https://data.snf.ch/stories/publications-en-libre-acces-monitoring-2021-fr.html">OA-Monitoring 2021</a>
+<br>
+
+<a class="button-blue" href="https://data.snf.ch/stories/publications-en-libre-acces-augmentation-de-8-points-2020-fr.html">OA-Monitoring 2020</a>
+<br>
+
+<a class="button-blue" href="https://data.snf.ch/stories/nouveaux-chiffres-oa-monitoring-2018-19-fr.html">OA-Monitoring 2018-2019</a>
+
+Les données, le texte et le code de ce récit de données sont [disponibles sur Github](`r params$github_url`) et [archivés sur Zenodo](`r params$doi_url`). <br>DOI: `r str_remove(params$doi_url, "https://doi.org/")`
+
+```{r prevent-internal-snsf-packages, include=FALSE}
+#| include: false
+
+# Internal SNSF packages must not be used in data stories, as their
+# pre-processing functions are internal and the corporate design differs from
+# the data portal.
+
+internal_pkg <- c("snfverse", "snf.preprocessing", "snf.plot")
+
+if (any(internal_pkg %in% loadedNamespaces())) {
+  stop(glue(
+    "You must not use internal SNSF packages in data stories.",
+    " Please resort to snf.datastory."
+  ))
+}
+```
