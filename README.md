@@ -4,7 +4,7 @@
 
 [English](https://data.snf.ch/stories/open-access-publications-monitoring-2022-en.html)\
 [German](https://data.snf.ch/stories/open-access-publikationen-monitoring-2022-de.html)\
-[French](https://data.snf.ch/stories/publications-en-libre-acces-monitoring-2022-fr.html)\
+[French](https://data.snf.ch/stories/publications-en-libre-acces-monitoring-2022-fr.html)
 
 **Author(s)**: Tobias Philipp, Marlene Lanzerstorfer, Simon Gorin
 
