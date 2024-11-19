@@ -72,7 +72,7 @@ This final dataset contains information about 15267 publications related to the 
 
 ### `apc_2022_2023_jul_2024.csv`
 
-The data consists of Article Processing Charges (APC) paid between 2022 and 2023 for publications reported to the SNSF as a result of its funding. Here is a description of the variables:
+The data consists of Article Processing Charges (APC) paid between 2022 and 2023. Here is a description of the variables:
 
 -   `Title`: the title of the publication.
 
@@ -86,8 +86,8 @@ The data consists of Article Processing Charges (APC) paid between 2022 and 2023
 
 -   `Total Amount`: the total amount in CHF paid by the SNSF for APC.
 
--   `Payment Year`: the year when the payment tool place.
+-   `Payment Year`: the year when the payment took place.
 
--   `Payment Date`: the date when the payment tool place.
+-   `Payment Date`: the date when the payment took place.
 
 -   `Institution grid id`: the grid id of the institution (when available) to which the author requesting the APC funding was affiliated.
